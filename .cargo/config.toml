@@ -1,0 +1,2 @@
+[build]
+target = "hexagon-unknown-linux-musl"
