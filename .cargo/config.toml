@@ -1,2 +1,8 @@
 [build]
 target = "hexagon-unknown-linux-musl"
+
+[target.hexagon-unknown-linux-musl]
+linker = "ld.lld"
+
+[unstable]
+build-std = ["core"]
