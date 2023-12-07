@@ -2,6 +2,8 @@
 #![allow(non_snake_case)]
 #![no_std]
 
+pub mod intrinsics;
+
 use core::panic::PanicInfo;
 
 #[panic_handler]
