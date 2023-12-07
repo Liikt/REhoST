@@ -1,2 +1,5 @@
 /target
-Cargo.lock
+*.lock*
+REhoST.gpr
+/REhoST.rep
+.gdb_history
