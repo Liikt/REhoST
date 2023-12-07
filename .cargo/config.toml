@@ -3,6 +3,7 @@ target = "hexagon-unknown-linux-musl"
 
 [target.hexagon-unknown-linux-musl]
 linker = "ld.lld"
+rustflags = ["-C", "link-args=-emain"]
 
 [unstable]
 build-std = ["core"]
