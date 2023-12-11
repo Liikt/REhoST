@@ -7,6 +7,14 @@ edition = "2021"
 
 [dependencies]
 
+[[bin]]
+name = "firmware"
+path = "./src/firmware.rs"
+
+[[bin]]
+name = "peripheral"
+path = "./src/peripheral.rs"
+
 [profile.release]
 panic = "abort"
 
