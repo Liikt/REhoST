@@ -3,6 +3,31 @@
 //! these ....
 
 #[no_mangle]
+fn __hexagon_memcpy_likely_aligned_min32bytes_mult8bytes() {
+    unimplemented!();
+}
+
+#[no_mangle]
+fn bcmp() {
+    unimplemented!();
+}
+
+#[no_mangle]
+fn memcpy() {
+    unimplemented!();
+}
+
+#[no_mangle]
+fn memset() {
+    unimplemented!();
+}
+
+#[no_mangle]
+fn __hexagon_umodsi3() {
+    unimplemented!();
+}
+
+#[no_mangle]
 fn __hexagon_divsf3() {
     unimplemented!();
 }
