@@ -3,22 +3,62 @@
 //! these ....
 
 #[no_mangle]
-fn __hexagon_memcpy_likely_aligned_min32bytes_mult8bytes() {
+fn __hexagon_memcpy_likely_aligned_min32bytes_mult8bytes(dst: *mut u8, src: *const u8, len: usize) -> isize {
+    memcpy(dst, src, len)
+}
+
+#[no_mangle]
+fn bcmp(dst: *mut u8, src: *const u8, len: usize) -> isize {
+    for x in 0..=(len-1) {
+        let src_byte: i8 = unsafe { src.offset(x as isize).read() as _ };
+        let dst_byte: i8 = unsafe { dst.offset(x as isize).read() as _ };
+        if src_byte != dst_byte { return (dst_byte - src_byte) as isize; }
+    }
+    0
+}
+
+#[no_mangle]
+fn memcmp(dst: *mut u8, src: *const u8, len: usize) -> isize {
+    for x in 0..=(len-1) {
+        let src_byte: i8 = unsafe { src.offset(x as isize).read() as _ };
+        let dst_byte: i8 = unsafe { dst.offset(x as isize).read() as _ };
+        if src_byte != dst_byte { return (dst_byte - src_byte) as isize; }
+    }
+    0
+}
+
+#[no_mangle]
+fn memcpy(dst: *mut u8, src: *const u8, len: usize) -> isize {
+    for x in 0..=(len-1) {
+        unsafe {
+            dst.offset(x as _).write(src.offset(x as _).read());
+        }
+    }
+    0
+}
+
+#[no_mangle]
+fn memset(dst: *mut u8, b: u8, len: usize) -> isize {
+    for x in 0..=(len-1) {
+        unsafe {
+            dst.offset(x as _).write(b);
+        }
+    }
+    0
+}
+
+#[no_mangle]
+fn __hexagon_adddf3() {
     unimplemented!();
 }
 
 #[no_mangle]
-fn bcmp() {
+fn __hexagon_divsi3() {
     unimplemented!();
 }
 
 #[no_mangle]
-fn memcpy() {
-    unimplemented!();
-}
-
-#[no_mangle]
-fn memset() {
+fn __hexagon_umoddi3() {
     unimplemented!();
 }
 
