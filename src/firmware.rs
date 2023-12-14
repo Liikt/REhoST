@@ -13,32 +13,21 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-fn check_magic_header() -> bool {
-    let header = rehost::read_magic_value();
-
-    // Do some bit magic
-
-    match header {
-        [b'h', b'e', b'a', b'd', b'e', b'e', b'r', b'?'] => true,
-        _ => false,
-    }
-}
-
-
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
-    // Check if the header is set correctly
-    if !check_magic_header() {
-        return -1;
+    rehost::send_data(b"letsa go");
+
+    let key: [u8; 16] = rehost::recv_data();
+    let value = rehost::read_magic_value();
+    let mut magic = [0; 8];
+
+    for x in 0..8 {
+        magic[x] = value[x] ^ key[x];
     }
 
-    rehost::send_data(b"foobar");
-    match &rehost::recv_data::<8>() {
-        b"barfoo\x00\x00" => {}
-        _ => return -1
-    };
-
-    rehost::send_data(constants::FLAG.as_bytes());
+    if &magic == b"b00tb00t" {
+        rehost::send_data(&constants::FLAG.as_bytes());
+    }
 
     loop {}
 }

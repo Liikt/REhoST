@@ -7,3 +7,4 @@ rustflags = ["-C", "link-args=-emain"]
 
 [unstable]
 build-std = ["core"]
+
