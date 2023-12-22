@@ -1,25 +1,29 @@
 use crate::constants;
 
+#[inline(always)]
 pub fn read_magic_value() -> [u8; 8] {
     unsafe { core::ptr::read_volatile(core::ptr::from_exposed_addr_mut(constants::MAGIC_ADDR)) }
 }
 
+#[inline(always)]
 fn can_send() -> bool {
     let byte: u8 =
-        unsafe { core::ptr::read_volatile(core::ptr::from_exposed_addr(constants::BUFF_ADDR)) };
+        unsafe { core::ptr::read_volatile(core::ptr::from_exposed_addr(constants::CHAN_ADDR)) };
     byte == 0xff
 }
 
+#[inline(always)]
 fn write_buf(data: &[u8]) {
     unsafe { 
-        let addr = core::ptr::from_exposed_addr_mut(constants::BUFF_ADDR);
+        let addr = core::ptr::from_exposed_addr_mut(constants::CHAN_ADDR);
         core::ptr::write_volatile(addr, data);
     }
 }
 
+#[inline(always)]
 fn read_buf() -> [u8; 8] {
     unsafe {
-        let addr = core::ptr::from_exposed_addr_mut(constants::BUFF_ADDR);
+        let addr = core::ptr::from_exposed_addr_mut(constants::CHAN_ADDR);
         core::ptr::read_volatile(addr)
     }
 }
