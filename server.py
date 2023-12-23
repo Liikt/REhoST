@@ -151,7 +151,6 @@ def step_cpus():
         new_states = deepcopy(STATES)
         for (session, state) in new_states.items():
             try:
-                print(state.stage)
                 if time() - state.start_time > 60:
                     del STATES[session]
                     continue
@@ -172,13 +171,10 @@ def step_cpus():
                         if state.mem[CHAN_ADDR] != b"firmware":
                             state.stage += 1
                             STATES[session] = state
-                            print("TEST", [x for x in state.mem[CHAN_ADDR]])
                     case 3:
                         if state.mem[CHAN_ADDR] != CANT_READ:
                             seed = unpack("<Q", state.mem[CHAN_ADDR].ljust(8, b'\x00')[:8])[0]
                             state.init_seed(seed)
-                            print([x for x in state.mem[CHAN_ADDR]])
-                            print("SEED", hex(seed))
                             state.stage += 1
                             state.mem[CHAN_ADDR] = CANT_READ
                             STATES[session] = state
@@ -188,21 +184,17 @@ def step_cpus():
                             val = unpack("<Q", state.mem[CHAN_ADDR].ljust(8, b'\x00')[:8])[0]
                             key = KEYS[state.rand_u8()]
                             state.magic ^= val ^ key
-                            print(hex(val), hex(key), hex(state.magic))
                             state.stage += 1
                             state.mem[CHAN_ADDR] = CANT_READ
                             STATES[session] = state
 
                     case 11:
-                        print("GOT TO STAGE 11")
                         if state.magic == 0x93273f7fd2ec9c1e:
                             state.mem[FLAG_ADDR] = FLAG
                             STATES[session] = state
-                        else:
-                            print(hex(state.magic))
             except Exception as e:
                 print(e)
-        sleep(0.2)
+        sleep(0.002)
 
 
 @app.route("/<address>", methods=["GET"])
@@ -312,4 +304,4 @@ if __name__ == "__main__":
         magic ^= b ^ key
         print(hex(b), hex(key), hex(magic))
 
-    app.run()
+    app.run("0.0.0.0")

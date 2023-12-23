@@ -3,6 +3,7 @@ import requests
 from time import sleep
 from struct import pack, unpack
 from base64 import b64encode, b64decode
+from multiprocessing import Pool
 
 URL = "http://localhost:5000"
 CHAN_URL = f"{URL}/0x13370000"
@@ -19,6 +20,7 @@ hash_data = [
     [161, 143, 114, 120, 70, 164, 188, 79],
 ]
 
+
 def demangle(val):
     val &= 0xffff_ffff_ffff_ffff
     val >>= 10
@@ -30,39 +32,41 @@ def demangle(val):
     return val
 
 
-s = requests.Session()
+def run(_x):
+    s = requests.Session()
 
-assert s.get(f"{URL}/get_session").json()["status"] == "ok"
+    assert s.get(f"{URL}/get_session").json()["status"] == "ok"
 
-resp = s.get(CHAN_URL).json()
-assert resp["status"] == "ok"
-assert b64decode(resp["value"].encode()) == b"letsa go"
+    resp = s.get(CHAN_URL).json()
+    assert resp["status"] == "ok"
+    assert b64decode(resp["value"].encode()) == b"letsa go"
 
-resp = s.put(CHAN_URL, json={"value": b64encode(b"herewego").decode()}).json()
-assert resp["status"] == "ok"
+    resp = s.put(CHAN_URL, json={"value": b64encode(b"herewego").decode()}).json()
+    assert resp["status"] == "ok"
 
-resp = s.get(CHAN_URL).json()
-assert resp["status"] == "ok"
-value = b64decode(resp["value"].encode())
-while value == b"herewego":
     resp = s.get(CHAN_URL).json()
     assert resp["status"] == "ok"
     value = b64decode(resp["value"].encode())
-    sleep(0.1)
-assert value == b"firmware"
-assert demangle(unpack("<Q", value)[0]) == 0xabad1dea
+    while value == b"herewego":
+        resp = s.get(CHAN_URL).json()
+        assert resp["status"] == "ok"
+        value = b64decode(resp["value"].encode())
+        sleep(0.1)
+    assert value == b"firmware"
+    assert demangle(unpack("<Q", value)[0]) == 0xabad1dea
 
-print("So far so good")
-resp = s.put(CHAN_URL, json={"value": b64encode(CLEAR).decode()}).json()
-sleep(0.3)
+    print("So far so good")
+    resp = s.put(CHAN_URL, json={"value": b64encode(CLEAR).decode()}).json()
 
-for x in hash_data:
-    resp = s.put(CHAN_URL, json={"value": b64encode(bytearray(x)).decode()}).json()
+    for x in hash_data:
+        resp = s.put(CHAN_URL, json={"value": b64encode(bytearray(x)).decode()}).json()
+        assert resp["status"] == "ok"
+        sleep(0.01)
+
+    resp = s.get(f"{URL}/0x4206900").json()
     assert resp["status"] == "ok"
+    return b64decode(resp["value"]).decode()
 
-    sleep(0.2)
 
-sleep(0.5)
-resp = s.get(f"{URL}/0x4206900").json()
-assert resp["status"] == "ok"
-print(b64decode(resp["value"]).decode())
+with Pool(100) as p:
+    print(p.map(run, [x for x in range(100)]))
