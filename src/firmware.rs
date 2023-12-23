@@ -26,6 +26,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
         return -1;
     }
 
+    rehost::send_data(b"firmware");
     let seed: [u8; 8] = rehost::recv_data();
     let mut rng = Rng::new(u64::from_le_bytes(seed));
 

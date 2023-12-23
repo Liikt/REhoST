@@ -14,7 +14,7 @@ use groestl::{Digest, Groestl512};
 use rng::Rng;
 
 fn demangle(device: u64) -> u64 {
-    (((((device >> 10) - 0xdead) << 4) | 0xc001c0de) ^ 0xbadc0ffee) - 0x1bd9c89bcd1fb46
+    (((((device >> 10) - 0xdead) << 4) | 0xc001c0de) ^ 0xbadc0ffee) - 0x195c98dc4ba0346
 }
 
 #[panic_handler]
@@ -25,14 +25,13 @@ fn panic(_info: &PanicInfo) -> ! {
 // periphery
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
-    rehost::send_data(b"herewego");
-
     let initial: [u8; 8] = rehost::recv_data();
     if &initial != b"letsa go" {
         return -1;
     }
+    rehost::send_data(b"herewego");
 
-    let seed = demangle(u64::from_le_bytes(initial));
+    let seed = demangle(u64::from_le_bytes(rehost::recv_data()));
     let mut rng = Rng::new(seed);
 
     // use hash as seed for rng in firmware -> use rng to check data from periph

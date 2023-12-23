@@ -8,6 +8,13 @@ fn can_send() -> bool {
 }
 
 #[inline(always)]
+fn can_recv() -> bool {
+    let byte: u64 =
+        unsafe { core::ptr::read_volatile(core::ptr::from_exposed_addr(constants::CHAN_ADDR)) };
+    byte != 0xffff_ffff_ffff_ffff
+}
+
+#[inline(always)]
 fn write_buf(data: &[u8]) {
     unsafe { 
         let addr = core::ptr::from_exposed_addr_mut(constants::CHAN_ADDR);
@@ -72,6 +79,8 @@ pub fn recv_data<const N: usize>() -> [u8; N] {
     let mut cur = 0;
     let mut ret = [0; N];
     while cur < N {
+        while !can_recv() {}
+
         ret[cur..cur+8].copy_from_slice(&read_buf());
         cur += 8
     }

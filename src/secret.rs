@@ -6,10 +6,11 @@ use groestl::{Digest, Groestl512};
 use rng::Rng;
 
 fn demangle(device: u64) -> u64 {
-    (((((device >> 10) - 0xdead) << 4) | 0xc001c0de) ^ 0xbadc0ffee) - 0x1bd9c89bcd1fb46
+    (((((device >> 10) - 0xdead) << 4) | 0xc001c0de) ^ 0xbadc0ffee) - 0x195c98dc4ba0346
 }
 
 fn firmware() {
+    println!("======= Firmware =======");
      let seed = u64::from_le_bytes([242, 39, 120, 8, 197, 92, 215, 51]);
      let data = [
         [31, 161, 225, 35, 83, 185, 150, 95],
@@ -25,14 +26,16 @@ fn firmware() {
     let mut magic = 0;
 
     for x in 0..7 {
-        magic ^= u64::from_le_bytes(data[x]) ^ constants::KEYS[rng.rand_u8() as usize];
+        let b = u64::from_le_bytes(data[x]);
+        let key = constants::KEYS[rng.rand_u8() as usize];
+        magic ^= b ^ key;
+        println!("{b:#x} {key:#x} {magic:#x}")
     }
-
-    println!("{magic:x}");
 }
 
 fn periphery() {
-    let seed = demangle(u64::from_le_bytes(*b"letsa go"));
+    println!("======= Periphery =======");
+    let seed = demangle(u64::from_le_bytes(*b"firmware"));
     let mut rng = Rng::new(seed);
     let mut data = 0;
 
