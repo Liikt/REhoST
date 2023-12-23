@@ -23,6 +23,7 @@ fn firmware() {
      ];
 
     let mut rng = Rng::new(seed);
+    println!("{seed:#x}");
     let mut magic = 0;
 
     for x in 0..7 {
