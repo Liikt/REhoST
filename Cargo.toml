@@ -17,7 +17,7 @@ path = "./src/peripheral.rs"
 
 [profile.release]
 panic = "abort"
-#strip = true
+strip = true
 
 [profile.dev]
 panic = "abort"
