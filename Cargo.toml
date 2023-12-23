@@ -11,8 +11,13 @@ path = "./src/firmware.rs"
 name = "peripheral"
 path = "./src/peripheral.rs"
 
+#[[bin]]
+#name = "secret"
+#path = "./src/secret.rs"
+
 [profile.release]
 panic = "abort"
+#strip = true
 
 [profile.dev]
 panic = "abort"

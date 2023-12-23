@@ -2,32 +2,43 @@
 #![allow(non_snake_case)]
 #![no_std]
 
+mod rng;
+mod rehost;
 mod constants;
 mod intrinsics;
-mod rehost;
 
 use core::panic::PanicInfo;
+
+use rng::Rng;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
+// firmware
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
     rehost::send_data(b"letsa go");
 
-    let key: [u8; 16] = rehost::recv_data();
-    let value = rehost::read_magic_value();
-    let mut magic = [0; 8];
-
-    for x in 0..8 {
-        magic[x] = value[x] ^ key[x];
+    let init = rehost::recv_data();
+    if &init != b"herewego" {
+        return -1;
     }
 
-    if &magic == b"b00tb00t" {
-        rehost::send_data(&constants::FLAG.as_bytes());
+    let seed: [u8; 8] = rehost::recv_data();
+    let mut rng = Rng::new(u64::from_le_bytes(seed));
+
+    let mut magic = 0;
+
+    for _ in 0..7 {
+        magic ^= u64::from_le_bytes(rehost::recv_data()) ^ constants::KEYS[rng.rand_u8() as usize];
     }
 
-    loop {}
+    if magic == 0x93273f7fd2ec9c1e {
+        rehost::send_flag();
+        return 0;
+    }
+
+    -1
 }

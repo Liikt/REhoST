@@ -2,32 +2,54 @@
 #![allow(non_snake_case)]
 #![no_std]
 
+mod rng;
+mod rehost;
 mod constants;
 mod intrinsics;
-mod rehost;
 
 use core::panic::PanicInfo;
+
 use groestl::{Digest, Groestl512};
+
+use rng::Rng;
+
+fn demangle(device: u64) -> u64 {
+    (((((device >> 10) - 0xdead) << 4) | 0xc001c0de) ^ 0xbadc0ffee) - 0x1bd9c89bcd1fb46
+}
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
+// periphery
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
+    rehost::send_data(b"herewego");
+
     let initial: [u8; 8] = rehost::recv_data();
-
-    let mut hasher = Groestl512::default();
-    hasher.update(initial);
-    let hash = hasher.finalize();
-    let mut secret = [0; constants::SECRET.len()];
-
-    for x in 0..hash.len() {
-        secret[x] = hash[x] ^ constants::SECRET.as_bytes()[x];
+    if &initial != b"letsa go" {
+        return -1;
     }
 
-    rehost::send_data(&secret);
+    let seed = demangle(u64::from_le_bytes(initial));
+    let mut rng = Rng::new(seed);
 
-    loop {}
+    // use hash as seed for rng in firmware -> use rng to check data from periph
+    let mut data = 0;
+
+    for _ in 0..16 {
+        data ^= rng.rand();
+    }
+
+    let mut hasher = Groestl512::default();
+    hasher.update(data.to_le_bytes());
+    let hash = hasher.finalize();
+
+    for x in 0..8 {
+        rehost::send_data(&hash[x*8..(x+1)*8]);
+    }
+
+    let _ = rehost::recv_flag();
+    0
 }
