@@ -2,7 +2,8 @@
 
 from time import time, sleep
 from copy import deepcopy
-from struct import unpack
+from random import randrange
+from struct import pack, unpack
 from base64 import b64decode, b64encode
 from secrets import token_hex
 from threading import Lock, Thread
@@ -10,6 +11,14 @@ from threading import Lock, Thread
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+INDEX = """
+How to use this API: <br>
+First get a session via GET /get_session <br>
+Whenever your emulator needs a value you can GET that value via /[address]. <br>
+Whenever you have to provide a value you can PUT that value via /[address]
+and a {"value": base64encode(bytes(data))} json body.
+"""
 
 FLAG = b"potluck{R3h05TinG_4s_4_S3rv1c3_1s_7h3_Fu7ur3!!!}"
 FLAG_ADDR = 0x4206900
@@ -218,8 +227,7 @@ def get_value(address):
         return jsonify(ret)
 
     if address not in state.mem:
-        ret["msg"] = "the provided address is not accessable"
-        return jsonify(ret)
+        state.mem[address] = pack("<Q", randrange(0x1000_0000, 0xffff_ffff_ffff_ffff))
 
     ret["status"] = "ok"
     ret["value"] = b64encode(state.mem[address]).decode()
@@ -258,10 +266,6 @@ def set_value(address):
         ret["msg"] = "firmware crashed. please get a new session"
         return jsonify(ret)
 
-    if address not in state.mem:
-        ret["msg"] = "the provided address is not accessable"
-        return jsonify(ret)
-
     state.mem[address] = value
 
     ret["status"] = "ok"
@@ -278,6 +282,11 @@ def get_session():
     ret = jsonify({"status": "ok"})
     ret.set_cookie("session", session)
     return ret
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return INDEX
 
 
 if __name__ == "__main__":
