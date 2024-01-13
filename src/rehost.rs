@@ -14,8 +14,9 @@ fn can_recv() -> bool {
     byte != 0xffff_ffff_ffff_ffff
 }
 
+/// During the ctf the function signature was `fn write_buf(data: &[u8])`
 #[inline(always)]
-fn write_buf(data: &[u8]) {
+fn write_buf(data: [u8; 8]) {
     unsafe { 
         let addr = core::ptr::from_exposed_addr_mut(constants::CHAN_ADDR);
         core::ptr::write_volatile(addr, data);
@@ -67,7 +68,11 @@ pub fn send_data(data: &[u8]) {
     while cur < data.len() {
         while !can_send() {}
 
-        write_buf(&data[cur..cur+8]);
+        // during the ctf the write_buf was called with
+        // `write_buf(&data[cur..cur+8]);`
+        let mut tmp_data = [0u8; 8];
+        tmp_data.copy_from_slice(&data[cur..cur+8]);
+        write_buf(tmp_data);
         cur += 8;
     }
 }
